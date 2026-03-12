@@ -90,6 +90,10 @@ void initWindows()
     windows->next = windows;
     windows->prev = windows;
     windows->window = 0;
+    taskbarWindows = allocate(sizeof(WindowElement));
+    taskbarWindows->next = taskbarWindows;
+    taskbarWindows->prev = taskbarWindows;
+    taskbarWindows->window = 0;
     registerListener(listener, IPC_NAME);
 }
 
