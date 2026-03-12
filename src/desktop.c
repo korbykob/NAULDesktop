@@ -4,6 +4,7 @@
 #include <drawing.h>
 #include <inputs.h>
 #include <windows.h>
+#include <scheduler.h>
 #include <processes.h>
 #include <ipc.h>
 #include <tty.h>
@@ -33,6 +34,7 @@ void entry()
     while (true)
     {
         processInputs();
+        yieldThread();
         draw();
     }
 }
