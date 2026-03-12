@@ -99,7 +99,6 @@ void initWindows()
 
 void cleanupWindows()
 {
-    unregisterListener(listener);
     WindowElement* element = windows;
     while (true)
     {
@@ -118,4 +117,7 @@ void cleanupWindows()
     {
         yieldThread();
     }
+    unregisterListener(listener);
+    unallocate(taskbarWindows);
+    unallocate(windows);
 }
