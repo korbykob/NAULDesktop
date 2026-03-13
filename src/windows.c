@@ -22,7 +22,7 @@ Window* createWindow(uint32_t width, uint32_t height)
     element->window->width = width + 20;
     element->window->height = height + 57;
     element->window->x = display.width / 2 - element->window->width / 2;
-    element->window->y = display.height / 2 - element->window->height / 2;
+    element->window->y = display.height / 2 - 16 - element->window->height / 2;
     element->window->minimised = false;
     element->window->lockMouse = false;
     element->window->bufferWidth = width;
