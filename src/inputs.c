@@ -9,8 +9,8 @@
 #define SUPER_KEY 91
 #define checkOverlap(x, y, width, height) (mouseX >= x && mouseX < (x + width) && mouseY >= y && mouseY < (y + height))
 
-KeyboardBuffer keyboardBuffer = { 0, 0 };
-MouseBuffer mouseBuffer = { 0, 0 };
+KeyboardBuffer keyboardBuffer = { 0 };
+MouseBuffer mouseBuffer = { 0 };
 uint32_t mouseX = 0;
 uint32_t mouseY = 0;
 bool lastLeft = false;
@@ -194,7 +194,7 @@ void desktopClick(bool left, bool pressed)
     }
 }
 
-void taskbarClick(bool left, bool pressed)
+void taskbarClick(bool left)
 {
     if (checkOverlap(4, display.height - 28, 24, 24))
     {
@@ -296,7 +296,7 @@ void mouseClick(bool left, bool pressed)
             }
             else
             {
-                taskbarClick(left, pressed);
+                taskbarClick(left);
             }
         }
         else

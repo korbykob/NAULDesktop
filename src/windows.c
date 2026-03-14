@@ -71,7 +71,7 @@ void destroyWindow(Window* window)
     unallocate(window);
 }
 
-uint64_t listener(uint64_t code, uint64_t arg1, uint64_t arg2, uint64_t arg3)
+uint64_t listener(uint64_t code, uint64_t arg1, uint64_t arg2, __attribute__((unused)) uint64_t arg3)
 {
     switch (code)
     {

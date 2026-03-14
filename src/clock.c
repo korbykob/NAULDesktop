@@ -30,7 +30,6 @@ void updateTime()
 
 void timeThread()
 {
-    bool blink = false;
     uint64_t last = getFemtoseconds();
     while (true)
     {
