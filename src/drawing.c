@@ -68,7 +68,7 @@ uint32_t* wallpaper = 0;
 
 void loadWallpaper()
 {
-    wallpaper = allocate(display.width * display.height * sizeof(uint32_t));
+    wallpaper = allocate(display.pitch * display.height * sizeof(uint32_t));
     uint32_t* buffer = wallpaper;
     BmpHeader* wallpaperFile = (BmpHeader*)getFile("/programs/desktop/wallpaper.bmp", 0);
     for (uint32_t y = 0; y < display.height; y++)
@@ -77,6 +77,7 @@ void loadWallpaper()
         {
             *buffer++ = *(uint32_t*)((uint8_t*)wallpaperFile + wallpaperFile->offset + (((wallpaperFile->height - (uint32_t)(wallpaperFile->height * (y / (double)display.height)) - 1) * wallpaperFile->width + (uint32_t)(wallpaperFile->width * (x / (double)display.width))) * 3)) & 0x00FFFFFF;
         }
+        buffer += display.pitch - display.width;
     }
 }
 
@@ -87,33 +88,33 @@ void initDrawing()
     mouseX = display.width / 2;
     mouseY = display.height / 2;
     font = (PsfFile*)getFile("/naul/font.psf", 0);
-    backBuffer = allocate(display.width * display.height * sizeof(uint32_t));
-    setMemory32(backBuffer, 0, display.width * display.height);
+    backBuffer = allocate(display.pitch * display.height * sizeof(uint32_t));
+    setMemory32(backBuffer, 0, display.pitch * display.height);
 }
 
 void drawBuffer(uint32_t* buffer, uint32_t width, uint32_t height, uint32_t x, uint32_t y)
 {
-    uint32_t* address = backBuffer + y * display.width + x;
+    uint32_t* address = backBuffer + y * display.pitch + x;
     for (uint32_t y = 0; y < height; y++)
     {
         for (uint32_t x = 0; x < width; x++)
         {
            *address++ = *buffer++;
         }
-        address += display.width - width;
+        address += display.pitch - width;
     }
 }
 
 void drawColour(uint32_t colour, uint32_t width, uint32_t height, uint32_t x, uint32_t y)
 {
-    uint32_t* address = backBuffer + y * display.width + x;
+    uint32_t* address = backBuffer + y * display.pitch + x;
     for (uint32_t y = 0; y < height; y++)
     {
         for (uint32_t x = 0; x < width; x++)
         {
            *address++ = colour;
         }
-        address += display.width - width;
+        address += display.pitch - width;
     }
 }
 
@@ -121,7 +122,7 @@ void drawString(const char* string, uint32_t colour, uint32_t x, uint32_t y)
 {
     while (*string)
     {
-        uint32_t* address = backBuffer + y * display.width + x;
+        uint32_t* address = backBuffer + y * display.pitch + x;
         uint8_t* glyph = font->data + font->glyphSize * *string;
         for (uint32_t y = 0; y < font->height; y++)
         {
@@ -140,7 +141,7 @@ void drawString(const char* string, uint32_t colour, uint32_t x, uint32_t y)
                 glyph++;
                 width -= amount;
             }
-            address += display.width - font->width;
+            address += display.pitch - font->width;
         }
         x += font->width + 1;
         string++;
@@ -175,7 +176,7 @@ void drawWindows()
 void drawTaskbar()
 {
     drawColour(GREY, display.width, 32, 0, display.height - 32);
-    uint32_t* address = backBuffer + (display.height - 28) * display.width + 4;
+    uint32_t* address = backBuffer + (display.height - 28) * display.pitch + 4;
     const uint8_t* buffer = exitIcon;
     for (uint8_t y = 0; y < 24; y++)
     {
@@ -183,7 +184,7 @@ void drawTaskbar()
         {
             *address++ = *buffer++ ? RED : WHITE;
         }
-        address += display.width - 24;
+        address += display.pitch - 24;
     }
     for (uint64_t i = 0; i < taskbarIcons; i++)
     {
@@ -234,7 +235,7 @@ void drawMouse()
 {
     if (mouseFree)
     {
-        uint32_t* address = backBuffer + mouseY * display.width + mouseX;
+        uint32_t* address = backBuffer + mouseY * display.pitch + mouseX;
         const uint8_t* mouseBuffer = mouseIcon;
         for (uint8_t y = 0; y < MOUSE_SIZE; y++)
         {
@@ -247,18 +248,18 @@ void drawMouse()
                 mouseBuffer++;
                 address++;
             }
-            address += display.width - MOUSE_SIZE;
+            address += display.pitch - MOUSE_SIZE;
         }
     }
 }
 
 void draw()
 {
-    copyMemory32(wallpaper, backBuffer, display.width * display.height);
+    copyMemory32(wallpaper, backBuffer, display.pitch * display.height);
     drawWindows();
     drawTaskbar();
     drawMouse();
-    copyMemory32(backBuffer, display.buffer, display.width * display.height);
+    copyMemory32(backBuffer, display.buffer, display.pitch * display.height);
 }
 
 void cleanupDrawing()
