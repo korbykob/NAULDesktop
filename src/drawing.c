@@ -87,7 +87,7 @@ void initDrawing()
     loadWallpaper();
     mouseX = display.width / 2;
     mouseY = display.height / 2;
-    font = (PsfFile*)getFile("/naul/font.psf", 0);
+    font = (PsfFile*)getFile("/naul/font32.psf", 0);
     backBuffer = allocate(display.pitch * display.height * sizeof(uint32_t));
     setMemory32(backBuffer, 0, display.pitch * display.height);
 }
