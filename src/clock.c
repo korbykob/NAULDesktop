@@ -2,6 +2,7 @@
 #include <rtc.h>
 #include <hpet.h>
 #include <scheduler.h>
+#include <cpu.h>
 
 uint64_t timeThreadId = 0;
 uint8_t hour = 0;

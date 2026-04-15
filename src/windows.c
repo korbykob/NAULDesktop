@@ -4,9 +4,9 @@
 #include <taskbar.h>
 #include <inputs.h>
 #include <allocator.h>
-#include <scheduler.h>
 #include <ipc.h>
 #include <mem.h>
+#include <cpu.h>
 
 WindowElement* windows = 0;
 WindowElement* taskbarWindows = 0;
