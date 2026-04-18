@@ -3,7 +3,7 @@ set -e
 
 mkdir -p bin
 
-COMPILER_FLAGS="$PROGRAM_COMPILER_FLAGS -Iinclude -g -fno-omit-frame-pointer -mavx2 -O2 -fvect-cost-model=dynamic -Wall -Wextra -Werror"
+COMPILER_FLAGS="$PROGRAM_COMPILER_FLAGS -Iinclude -g -fno-omit-frame-pointer -O2 -fvect-cost-model=dynamic -Wall -Wextra -Werror"
 
 gcc $COMPILER_FLAGS src/taskbar.c -o bin/taskbar.o
 gcc $COMPILER_FLAGS src/clock.c -o bin/clock.o
