@@ -1,7 +1,5 @@
 #include <windows.h>
-#include <desktop.h>
 #include <drawing.h>
-#include <taskbar.h>
 #include <inputs.h>
 #include <allocator.h>
 #include <ipc.h>
