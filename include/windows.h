@@ -61,6 +61,7 @@ typedef struct
 
 extern WindowElement* windows;
 extern WindowElement* taskbarWindows;
+extern bool windowsLock;
 
 void initWindows();
 

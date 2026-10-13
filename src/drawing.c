@@ -9,6 +9,7 @@
 #include <mem.h>
 #include <bmp.h>
 #include <psf.h>
+#include <cpu.h>
 
 #define MOUSE_SIZE 16
 #define WHITE 0xFFFFFF
@@ -255,8 +256,10 @@ void drawMouse()
 void draw()
 {
     copyMemory32(wallpaper, backBuffer, display.pitch * display.height);
+    lock(&windowsLock);
     drawWindows();
     drawTaskbar();
+    unlock(&windowsLock);
     drawMouse();
     copyMemory32(backBuffer, display.buffer, display.pitch * display.height);
 }

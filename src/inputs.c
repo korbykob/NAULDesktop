@@ -5,6 +5,7 @@
 #include <keyboard.h>
 #include <mouse.h>
 #include <processes.h>
+#include <cpu.h>
 
 #define SUPER_KEY 91
 #define checkOverlap(x, y, width, height) (mouseX >= x && mouseX < (x + width) && mouseY >= y && mouseY < (y + height))
@@ -318,6 +319,7 @@ void mouseClick(bool left, bool pressed)
 
 void processInputs()
 {
+    lock(&windowsLock);
     while (keyboardBuffer.tail != keyboardBuffer.head)
     {
         keyPress(keyboardBuffer.buffer[keyboardBuffer.tail].scancode, keyboardBuffer.buffer[keyboardBuffer.tail].pressed);
@@ -363,6 +365,7 @@ void processInputs()
         }
         mouseBuffer.tail++;
     }
+    unlock(&windowsLock);
 }
 
 void cleanupInputs()

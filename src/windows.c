@@ -8,9 +8,11 @@
 
 WindowElement* windows = 0;
 WindowElement* taskbarWindows = 0;
+bool windowsLock = false;
 
 Window* createWindow(uint32_t width, uint32_t height)
 {
+    lock(&windowsLock);
     WindowElement* element = allocate(sizeof(WindowElement));
     ((WindowElement*)windows->prev)->next = element;
     element->next = windows;
@@ -38,11 +40,13 @@ Window* createWindow(uint32_t width, uint32_t height)
     taskbarElement->prev = taskbarWindows->prev;
     taskbarWindows->prev = taskbarElement;
     taskbarElement->window = element->window;
+    unlock(&windowsLock);
     return element->window;
 }
 
 void destroyWindow(Window* window)
 {
+    lock(&windowsLock);
     if (focus == window)
     {
         focus = 0;
@@ -67,6 +71,7 @@ void destroyWindow(Window* window)
     unallocate(element);
     unallocate(window->buffer);
     unallocate(window);
+    unlock(&windowsLock);
 }
 
 uint64_t listener(uint64_t code, uint64_t arg1, uint64_t arg2, __attribute__((unused)) uint64_t arg3)
@@ -111,6 +116,7 @@ void cleanupWindows()
             break;
         }
     }
+    unlock(&windowsLock);
     while (windows->next != windows)
     {
         yieldThread();
