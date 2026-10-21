@@ -1,6 +1,7 @@
 #pragma once
 
 #include <definitions.h>
+#include <list.h>
 
 #define IPC_NAME "desktop"
 
@@ -54,13 +55,12 @@ typedef struct
 } Window;
 typedef struct
 {
-    void* next;
-    void* prev;
+    List header;
     Window* window;
 } WindowElement;
 
-extern WindowElement* windows;
-extern WindowElement* taskbarWindows;
+extern List windows;
+extern List taskbarWindows;
 extern bool windowsLock;
 
 void initWindows();

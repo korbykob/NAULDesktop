@@ -6,18 +6,13 @@
 #include <mem.h>
 #include <cpu.h>
 
-WindowElement* windows = 0;
-WindowElement* taskbarWindows = 0;
+List windows = { &windows, &windows };
+List taskbarWindows = { &taskbarWindows, &taskbarWindows };
 bool windowsLock = false;
 
 Window* createWindow(uint32_t width, uint32_t height)
 {
-    lock(&windowsLock);
     WindowElement* element = allocate(sizeof(WindowElement));
-    ((WindowElement*)windows->prev)->next = element;
-    element->next = windows;
-    element->prev = windows->prev;
-    windows->prev = element;
     element->window = allocate(sizeof(Window));
     element->window->width = width + 20;
     element->window->height = height + 57;
@@ -33,13 +28,12 @@ Window* createWindow(uint32_t width, uint32_t height)
     element->window->title[0] = '\0';
     setMemory32(element->window->buffer, 0, width * height);
     setMemory32(element->window->icon, 0, 24 * 24);
-    focus = element->window;
     WindowElement* taskbarElement = allocate(sizeof(WindowElement));
-    ((WindowElement*)taskbarWindows->prev)->next = taskbarElement;
-    taskbarElement->next = taskbarWindows;
-    taskbarElement->prev = taskbarWindows->prev;
-    taskbarWindows->prev = taskbarElement;
     taskbarElement->window = element->window;
+    lock(&windowsLock);
+    linkList(&windows, &element->header);
+    linkList(&taskbarWindows, &taskbarElement->header);
+    focus = element->window;
     unlock(&windowsLock);
     return element->window;
 }
@@ -53,25 +47,29 @@ void destroyWindow(Window* window)
         dragging = 0;
         mouseFree = true;
     }
-    WindowElement* taskbarElement = taskbarWindows;
-    while (taskbarElement->window != window)
+    WindowElement* taskbarElement = (WindowElement*)&taskbarWindows;
+    while (iterateList(&taskbarWindows, (List**)&taskbarElement))
     {
-        taskbarElement = taskbarElement->next;
+        if (taskbarElement->window == window)
+        {
+            break;
+        }
     }
-    ((WindowElement*)taskbarElement->prev)->next = taskbarElement->next;
-    ((WindowElement*)taskbarElement->next)->prev = taskbarElement->prev;
+    WindowElement* element = (WindowElement*)&windows;
+    while (iterateList(&windows, (List**)&element))
+    {
+        if (element->window == window)
+        {
+            break;
+        }
+    }
+    unlinkList(&taskbarElement->header);
+    unlinkList(&element->header);
+    unlock(&windowsLock);
     unallocate(taskbarElement);
-    WindowElement* element = windows;
-    while (element->window != window)
-    {
-        element = element->next;
-    }
-    ((WindowElement*)element->prev)->next = element->next;
-    ((WindowElement*)element->next)->prev = element->prev;
     unallocate(element);
     unallocate(window->buffer);
     unallocate(window);
-    unlock(&windowsLock);
 }
 
 uint64_t listener(uint64_t code, uint64_t arg1, uint64_t arg2, __attribute__((unused)) uint64_t arg3)
@@ -89,39 +87,31 @@ uint64_t listener(uint64_t code, uint64_t arg1, uint64_t arg2, __attribute__((un
 
 void initWindows()
 {
-    windows = allocate(sizeof(WindowElement));
-    windows->next = windows;
-    windows->prev = windows;
-    windows->window = 0;
-    taskbarWindows = allocate(sizeof(WindowElement));
-    taskbarWindows->next = taskbarWindows;
-    taskbarWindows->prev = taskbarWindows;
-    taskbarWindows->window = 0;
     registerListener(listener, IPC_NAME);
 }
 
 void cleanupWindows()
 {
-    WindowElement* element = windows;
+    WindowElement* element = (WindowElement*)&windows;
+    while (iterateList(&windows, (List**)&element))
+    {
+        element->window->events[element->window->eventsHead].type = CLOSE_EVENT;
+        element->window->eventsHead++;
+    }
+    unlock(&windowsLock);
     while (true)
     {
-        if (element->window)
+        lock(&windowsLock);
+        uint64_t count = listLength(&windows);
+        unlock(&windowsLock);
+        if (count > 0)
         {
-            element->window->events[element->window->eventsHead].type = CLOSE_EVENT;
-            element->window->eventsHead++;
+            yieldThread();
         }
-        element = element->next;
-        if (element == windows)
+        else
         {
             break;
         }
     }
-    unlock(&windowsLock);
-    while (windows->next != windows)
-    {
-        yieldThread();
-    }
     unregisterListener(listener);
-    unallocate(taskbarWindows);
-    unallocate(windows);
 }

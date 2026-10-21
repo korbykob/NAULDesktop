@@ -117,10 +117,10 @@ void mouseMove(int16_t x, int16_t y)
 void desktopClick(bool left, bool pressed)
 {
     bool nothing = true;
-    WindowElement* element = windows->prev;
-    while (true)
+    WindowElement* element = (WindowElement*)&windows;
+    while (deiterateList(&windows, (List**)&element))
     {
-        if (element->window && !element->window->minimised)
+        if (!element->window->minimised)
         {
             if (checkOverlap(element->window->x, element->window->y, element->window->width, element->window->height))
             {
@@ -143,12 +143,8 @@ void desktopClick(bool left, bool pressed)
                             if (focus != element->window)
                             {
                                 focus = element->window;
-                                ((WindowElement*)element->prev)->next = element->next;
-                                ((WindowElement*)element->next)->prev = element->prev;
-                                ((WindowElement*)windows->prev)->next = element;
-                                element->next = windows;
-                                element->prev = windows->prev;
-                                windows->prev = element;
+                                unlinkList(&element->header);
+                                linkList(&windows, &element->header);
                             }
                             draggingX = (int64_t)mouseX - focus->x;
                             draggingY = (int64_t)mouseY - focus->y;
@@ -161,12 +157,8 @@ void desktopClick(bool left, bool pressed)
                     if (focus != element->window)
                     {
                         focus = element->window;
-                        ((WindowElement*)element->prev)->next = element->next;
-                        ((WindowElement*)element->next)->prev = element->prev;
-                        ((WindowElement*)windows->prev)->next = element;
-                        element->next = windows;
-                        element->prev = windows->prev;
-                        windows->prev = element;
+                        unlinkList(&element->header);
+                        linkList(&windows, &element->header);
                     }
                     if (focus->lockMouse && mouseFree)
                     {
@@ -182,11 +174,6 @@ void desktopClick(bool left, bool pressed)
                 }
                 break;
             }
-        }
-        element = element->prev;
-        if (element == windows->prev)
-        {
-            break;
         }
     }
     if (nothing)
@@ -222,64 +209,54 @@ void taskbarClick(bool left)
         if (check)
         {
             uint64_t i = taskbarIcons + 1;
-            WindowElement* element = taskbarWindows;
-            while (true)
+            WindowElement* element = (WindowElement*)&taskbarWindows;
+            while (iterateList(&taskbarWindows, (List**)&element))
             {
-                if (element->window)
+                if (checkOverlap(5 + i * 32, display.height - 28, 24, 24))
                 {
-                    if (checkOverlap(5 + i * 32, display.height - 28, 24, 24))
+                    if (left)
                     {
-                        if (left)
+                        if (element->window->minimised)
                         {
-                            if (element->window->minimised)
+                            element->window->minimised = false;
+                            focus = element->window;
+                            WindowElement* windowsElement = (WindowElement*)&windows;
+                            while (iterateList(&windows, (List**)&windowsElement))
                             {
-                                element->window->minimised = false;
-                                focus = element->window;
-                                WindowElement* windowsElement = windows;
-                                while (windowsElement->window != element->window)
+                                if (windowsElement->window == element->window)
                                 {
-                                    windowsElement = windowsElement->next;
+                                    break;
                                 }
-                                ((WindowElement*)windowsElement->prev)->next = windowsElement->next;
-                                ((WindowElement*)windowsElement->next)->prev = windowsElement->prev;
-                                ((WindowElement*)windows->prev)->next = windowsElement;
-                                windowsElement->next = windows;
-                                windowsElement->prev = windows->prev;
-                                windows->prev = windowsElement;
                             }
-                            else if (focus == element->window)
-                            {
-                                element->window->minimised = true;
-                            }
-                            else
-                            {
-                                focus = element->window;
-                                WindowElement* windowsElement = windows;
-                                while (windowsElement->window != element->window)
-                                {
-                                    windowsElement = windowsElement->next;
-                                }
-                                ((WindowElement*)windowsElement->prev)->next = windowsElement->next;
-                                ((WindowElement*)windowsElement->next)->prev = windowsElement->prev;
-                                ((WindowElement*)windows->prev)->next = windowsElement;
-                                windowsElement->next = windows;
-                                windowsElement->prev = windows->prev;
-                                windows->prev = windowsElement;
-                            }
+                            unlinkList(&windowsElement->header);
+                            linkList(&windows, &windowsElement->header);
+                        }
+                        else if (focus == element->window)
+                        {
+                            element->window->minimised = true;
                         }
                         else
                         {
-                            element->window->events[element->window->eventsHead].type = CLOSE_EVENT;
-                            element->window->eventsHead++;
+                            focus = element->window;
+                            WindowElement* windowsElement = (WindowElement*)&windows;
+                            while (iterateList(&windows, (List**)&windowsElement))
+                            {
+                                if (windowsElement->window == element->window)
+                                {
+                                    break;
+                                }
+                            }
+                            unlinkList(&windowsElement->header);
+                            linkList(&windows, &windowsElement->header);
                         }
                     }
-                    i++;
+                    else
+                    {
+                        element->window->events[element->window->eventsHead].type = CLOSE_EVENT;
+                        element->window->eventsHead++;
+                    }
                 }
-                element = element->next;
-                if (element == taskbarWindows)
-                {
-                    break;
-                }
+                i++;
             }
         }
     }

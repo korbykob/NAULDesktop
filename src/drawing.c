@@ -150,10 +150,10 @@ void drawString(const char* string, uint32_t colour, uint32_t x, uint32_t y)
 
 void drawWindows()
 {
-    WindowElement* element = windows;
-    while (true)
+    WindowElement* element = (WindowElement*)&windows;
+    while (iterateList(&windows, (List**)&element))
     {
-        if (element->window && !element->window->minimised)
+        if (!element->window->minimised)
         {
             drawColour(focus == element->window ? WHITE : BLACK, element->window->width, element->window->height, element->window->x, element->window->y);
             drawColour(GREY, element->window->width - 10, element->window->height - 10, element->window->x + 5, element->window->y + 5);
@@ -164,11 +164,6 @@ void drawWindows()
             drawColour(BLACK, 32, 32, element->window->x + element->window->width - 79, element->window->y + 10);
             drawString("-", WHITE, element->window->x + element->window->width - 71, element->window->y + 10);
             drawBuffer(element->window->buffer, element->window->bufferWidth, element->window->bufferHeight, element->window->x + 10, element->window->y + 47);
-        }
-        element = element->next;
-        if (element == windows)
-        {
-            break;
         }
     }
 }
@@ -192,27 +187,19 @@ void drawTaskbar()
     }
     drawColour(BLACK, 2, 24, taskbarIcons * 32 + 31, display.height - 28);
     uint64_t i = taskbarIcons + 1;
-    WindowElement* element = taskbarWindows;
-    while (true)
+    WindowElement* element = (WindowElement*)&taskbarWindows;
+    while (iterateList(&taskbarWindows, (List**)&element))
     {
-        if (element->window)
+        if (!element->window->minimised)
         {
-            if (!element->window->minimised)
+            drawColour(BLACK, 24, 2, 5 + i * 32, display.height - 2);
+            if (focus == element->window)
             {
-                drawColour(BLACK, 24, 2, 5 + i * 32, display.height - 2);
-                if (focus == element->window)
-                {
-                    drawColour(BLACK, 28, 28, 3 + i * 32, display.height - 30);
-                }
+                drawColour(BLACK, 28, 28, 3 + i * 32, display.height - 30);
             }
-            drawBuffer(element->window->icon, 24, 24, 5 + i * 32, display.height - 28);
-            i++;
         }
-        element = element->next;
-        if (element == taskbarWindows)
-        {
-            break;
-        }
+        drawBuffer(element->window->icon, 24, 24, 5 + i * 32, display.height - 28);
+        i++;
     }
     drawString(half ? "PM" : "AM", WHITE, display.width - 37, display.height - 32);
     char characters[3];
